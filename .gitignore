@@ -1,0 +1,5 @@
+# 项目内部数据（不纳入开源仓库）
+.workbuddy/
+
+# 部署副本（源码即 index.html，dist 为 CloudStudio 部署用副本）
+dist/

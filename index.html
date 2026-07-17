@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>答案之书 · 给迷茫的人一点光</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Long+Cang&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#1b1b3a;
+    --bg-2:#2d2a4a;
+    --bg-3:#4a3b5c;
+    --dawn-1:#f6b17a;
+    --dawn-2:#f7d9a0;
+    --ink:#f5f0e8;
+    --ink-soft:#cfc7ba;
+    --gold:#f4c77b;
+    --card:#221f3d;
+    --card-soft:#2c2950;
+    --line:rgba(244,199,123,.28);
+    --shadow:0 30px 80px rgba(0,0,0,.45);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --hand:"Long Cang","Noto Serif SC",cursive;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-2) 45%,var(--bg-3));
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    overflow-x:hidden;position:relative;
+  }
+  .aura{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .aura::before,.aura::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:float 16s ease-in-out infinite;}
+  .aura::before{width:46vmax;height:46vmax;top:-18vmax;right:-10vmax;background:radial-gradient(circle,var(--dawn-1),transparent 65%);}
+  .aura::after{width:40vmax;height:40vmax;bottom:-16vmax;left:-12vmax;background:radial-gradient(circle,var(--dawn-2),transparent 65%);opacity:.35;animation-delay:-8s;}
+  @keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(0,4vmax)}}
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;animation:tw 4s ease-in-out infinite;}
+  @keyframes tw{0%,100%{opacity:.15}50%{opacity:.8}}
+
+  .wrap{position:relative;z-index:2;width:100%;max-width:760px;padding:34px 22px 60px;display:flex;flex-direction:column;align-items:center;}
+  header{text-align:center;margin-bottom:18px;}
+  .title{font-size:clamp(30px,7vw,46px);font-weight:700;letter-spacing:.18em;background:linear-gradient(120deg,var(--dawn-2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .subtitle{margin-top:10px;color:var(--ink-soft);font-size:15px;letter-spacing:.05em;}
+  .subtitle .hand{font-family:var(--hand);font-size:22px;color:var(--gold);}
+
+  /* 情绪选择 */
+  .mood-box{width:100%;margin-bottom:16px;transition:opacity .5s,height .5s,margin .5s;}
+  .mood-box label{display:block;color:var(--ink-soft);font-size:14px;margin-bottom:10px;text-align:center;}
+  .mood-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .mood-chip{font-size:14px;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;transition:.2s;font-family:var(--serif);display:inline-flex;align-items:center;gap:5px;}
+  .mood-chip:hover{color:var(--ink);border-color:var(--gold);}
+  .mood-chip.active{background:linear-gradient(120deg,var(--gold),var(--dawn-1));color:#3a2410;border-color:transparent;font-weight:600;box-shadow:0 6px 18px rgba(244,199,123,.25);}
+
+  /* 提问区 */
+  .ask{width:100%;margin-bottom:18px;transition:opacity .5s,height .5s,margin .5s;}
+  .ask label{display:block;color:var(--ink-soft);font-size:14px;margin-bottom:8px;text-align:center;}
+  .ask input{width:100%;padding:14px 18px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);font-family:var(--serif);font-size:16px;outline:none;transition:.25s;text-align:center;}
+  .ask input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);box-shadow:0 0 0 4px rgba(244,199,123,.12);}
+  .ask input::placeholder{color:rgba(207,199,186,.5);}
+  .ask .skip{display:block;text-align:center;margin-top:10px;color:rgba(207,199,186,.6);font-size:13px;cursor:pointer;text-decoration:underline dotted;}
+
+  /* 书 */
+  .book-stage{width:100%;perspective:1400px;display:flex;justify-content:center;margin:6px 0 8px;}
+  .book{position:relative;width:100%;max-width:560px;min-height:300px;transform-style:preserve-3d;cursor:pointer;}
+  .cover,.page{border-radius:20px;padding:42px 36px;box-shadow:var(--shadow);border:1px solid var(--line);}
+  .cover{position:absolute;top:0;left:0;width:100%;z-index:2;backface-visibility:hidden;background:radial-gradient(120% 120% at 80% 0%,rgba(246,177,122,.22),transparent 55%),linear-gradient(155deg,var(--card-soft),var(--card));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:300px;transition:transform .9s cubic-bezier(.6,.05,.25,1);transform-origin:left center;}
+  .book.open .cover{transform:rotateY(-165deg);pointer-events:none;}
+  .cover .em{font-size:54px;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4));}
+  .cover h2{font-size:24px;letter-spacing:.1em;margin-bottom:10px;color:var(--dawn-2);}
+  .cover p{color:var(--ink-soft);font-size:14px;line-height:1.9;max-width:320px;}
+  .page{position:absolute;top:0;left:0;width:100%;min-height:300px;z-index:1;background:linear-gradient(160deg,#fbf6ec,#f3e9d6);color:#3a2f23;display:flex;flex-direction:column;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s .35s;}
+  .book.open .page{opacity:1;pointer-events:auto;}
+  .page .cat{font-size:12px;letter-spacing:.2em;color:#b08a4f;margin-bottom:18px;display:inline-block;border:1px solid #e0cda0;padding:3px 12px;border-radius:20px;align-self:flex-start;}
+  .page .quote{font-size:clamp(20px,4.6vw,27px);line-height:1.85;font-weight:600;letter-spacing:.01em;color:#2c2419;}
+  .page .en{margin-top:14px;font-style:italic;font-size:15px;color:#8a7350;line-height:1.7;}
+  .page .src{margin-top:22px;text-align:right;color:#6f5a3c;font-size:15px;}
+  .page .src b{color:#3a2f23;}
+
+  /* 情绪治愈小动画 */
+  .mood-anim{width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;margin:14px 0 2px;}
+  .mood-anim .scn{width:150px;height:112px;filter:drop-shadow(0 8px 22px rgba(0,0,0,.3));}
+  .mood-cap{margin-top:4px;color:var(--dawn-2);font-size:15px;text-align:center;letter-spacing:.04em;font-family:var(--hand);font-size:20px;}
+
+  /* 控制 */
+  .controls{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:22px;}
+  .btn{font-family:var(--serif);font-size:15px;padding:12px 22px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer;transition:.22s;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{background:rgba(244,199,123,.14);border-color:var(--gold);transform:translateY(-1px);}
+  .btn.primary{background:linear-gradient(120deg,var(--gold),var(--dawn-1));color:#3a2410;border:none;font-weight:600;box-shadow:0 10px 30px rgba(244,199,123,.3);}
+  .btn.primary:hover{filter:brightness(1.05);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+  /* 分类筛选 */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:22px 0 6px;}
+  .chip{font-size:13px;padding:7px 16px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;transition:.2s;font-family:var(--serif);}
+  .chip:hover{color:var(--ink);}
+  .chip.active{background:var(--gold);color:#3a2410;border-color:var(--gold);font-weight:600;}
+
+  /* 收藏夹入口 */
+  .fav-entry{margin-top:26px;width:100%;text-align:center;}
+
+  footer{margin-top:30px;text-align:center;color:rgba(207,199,186,.45);font-size:12px;line-height:1.9;max-width:520px;}
+  footer .heart{color:var(--gold);}
+
+  /* 弹窗 */
+  .modal{position:fixed;inset:0;background:rgba(10,8,20,.62);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px;}
+  .modal.show{display:flex;}
+  .modal-card{width:100%;max-width:540px;max-height:86vh;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
+  .modal-head h3{font-size:18px;color:var(--dawn-2);font-weight:600;}
+  .modal-x{background:none;border:none;color:var(--ink-soft);font-size:26px;cursor:pointer;line-height:1;}
+  .modal-body{padding:20px 22px;overflow-y:auto;}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .modal-tip{color:var(--ink-soft);font-size:13px;margin-bottom:10px;}
+  #copyArea{width:100%;min-height:150px;resize:vertical;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font-family:var(--serif);font-size:15px;padding:14px;line-height:1.8;outline:none;}
+  .fav-card{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .fav-card .txt{flex:1;font-size:14px;line-height:1.7;color:var(--ink);}
+  .fav-card .meta{display:block;color:rgba(207,199,186,.6);font-size:12px;margin-top:8px;}
+  .fav-card .del{color:#e08a8a;cursor:pointer;font-size:20px;line-height:1;background:none;border:none;flex-shrink:0;}
+  .empty{color:rgba(207,199,186,.5);font-size:13px;text-align:center;padding:18px;}
+  #cardCanvasHolder canvas{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card-soft);border:1px solid var(--line);color:var(--ink);padding:11px 20px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:.35s;z-index:50;box-shadow:var(--shadow);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* 小动画关键帧 */
+  @keyframes grow{0%{transform:scaleY(.2);opacity:.4}100%{transform:scaleY(1);opacity:1}}
+  @keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+  @keyframes drift{0%{transform:translateX(-14px) rotate(-3deg)}100%{transform:translateX(14px) rotate(3deg)}}
+  @keyframes twk{0%,100%{opacity:.2}50%{opacity:1}}
+  @keyframes drop{0%{transform:translateY(-8px);opacity:0}30%{opacity:.9}100%{transform:translateY(30px);opacity:0}}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  @keyframes mend{0%,100%{opacity:1}45%{opacity:0}}
+  @keyframes barUp{0%{transform:scaleY(.18)}100%{transform:scaleY(1)}}
+  @keyframes sunUp{0%{transform:translateY(26px);opacity:.5}100%{transform:translateY(0);opacity:1}}
+  @keyframes cloudMove{0%{transform:translateX(-10px)}100%{transform:translateX(10px)}}
+  @keyframes bubble{0%{transform:translateY(18px);opacity:0}20%{opacity:.9}100%{transform:translateY(-26px);opacity:0}}
+  .m-sprout{transform-box:fill-box;transform-origin:bottom center;animation:grow 2.6s ease-in-out infinite alternate;}
+  .m-boat{transform-box:fill-box;transform-origin:center;animation:drift 5s ease-in-out infinite alternate;}
+  .m-star{transform-box:fill-box;transform-origin:center;animation:twk 2.2s infinite;}
+  .m-rain{transform-box:fill-box;animation:drop 1.6s linear infinite;}
+  .m-star2{transform-box:fill-box;transform-origin:center;animation:twk 2.4s infinite;}
+  .m-heart{transform-box:fill-box;transform-origin:center;animation:beat 1.8s ease-in-out infinite;}
+  .m-glow{transform-box:fill-box;transform-origin:center;animation:twk 2.4s infinite;}
+  .m-crack{animation:mend 3s ease-in-out infinite;}
+  .m-bar{transform-box:fill-box;transform-origin:bottom;animation:barUp 1.4s ease-out infinite alternate;}
+  .m-sun{transform-box:fill-box;transform-origin:center;animation:sunUp 3s ease-in-out infinite alternate;}
+  .m-cloud{transform-box:fill-box;animation:cloudMove 6s ease-in-out infinite alternate;}
+  .m-bub{transform-box:fill-box;animation:bubble 3s ease-in infinite;}
+
+  /* 心境处方 */
+  .remedy{width:100%;max-width:560px;display:none;margin:8px 0 2px;text-align:left;border:1px solid var(--line);border-radius:18px;padding:16px 20px;background:linear-gradient(160deg,rgba(244,199,123,.10),rgba(255,255,255,.03));}
+  .remedy h4{font-size:15px;color:var(--dawn-2);margin-bottom:10px;letter-spacing:.05em;display:flex;align-items:center;gap:7px;font-weight:600;}
+  .remedy .r-item{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed rgba(244,199,123,.2);}
+  .remedy .r-item:last-child{border-bottom:none;}
+  .remedy .r-ic{font-size:20px;flex-shrink:0;width:26px;text-align:center;line-height:1.4;}
+  .remedy .r-bd{flex:1;}
+  .remedy .r-name{font-size:15px;font-weight:600;color:var(--ink);}
+  .remedy .r-why{font-size:13px;color:var(--ink-soft);margin-top:3px;line-height:1.65;}
+
+  @media (max-width:480px){
+    .cover,.page{padding:32px 24px;}
+    .book{min-height:280px;}
+  }
+</style>
+</head>
+<body>
+<div class="aura"></div>
+<div class="stars" id="stars"></div>
+
+<div class="wrap">
+  <header>
+    <div class="title">答案之书</div>
+    <div class="subtitle">给正在低谷与迷茫里的你 · <span class="hand">翻一页，看看光</span></div>
+  </header>
+
+  <!-- 情绪选择 -->
+  <div class="mood-box" id="moodBox">
+    <label>你今天的感觉是：（选一个，它会更懂你）</label>
+    <div class="mood-row" id="moodRow"></div>
+  </div>
+
+  <!-- 提问区 -->
+  <div class="ask" id="askBox">
+    <label>先在心里，轻轻问出一个问题……（可不填，默念即可）</label>
+    <input id="question" type="text" placeholder="例如：我还能好起来吗？" maxlength="40" />
+    <span class="skip" id="skipAsk">什么都不想说，直接翻书 →</span>
+  </div>
+
+  <!-- 书 -->
+  <div class="book-stage">
+    <div class="book" id="book">
+      <div class="cover" id="cover">
+        <div class="em">🌅</div>
+        <h2>翻开这一页</h2>
+        <p>当你准备好了，把手放在书上，轻轻点一下。<br/>它会从漫长的书页里，挑一句恰好属于此刻的话。</p>
+      </div>
+      <div class="page" id="page">
+        <span class="cat" id="cat"></span>
+        <div class="quote" id="quote"></div>
+        <div class="en" id="en"></div>
+        <div class="src" id="src"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 情绪治愈小动画 -->
+  <div class="mood-anim" id="moodAnim">
+    <div id="moodSvg"></div>
+    <div class="mood-cap" id="moodCap"></div>
+  </div>
+
+  <!-- 心境处方 -->
+  <div class="remedy" id="remedy">
+    <h4>🌿 今晚，可以这样陪自己</h4>
+    <div id="remedyList"></div>
+  </div>
+
+  <!-- 控制 -->
+  <div class="controls">
+    <button class="btn primary" id="openBtn">📖 翻开答案</button>
+    <button class="btn" id="againBtn" disabled>🔁 再翻一页</button>
+    <button class="btn" id="copyBtn" disabled>📋 抄下这句</button>
+    <button class="btn" id="favBtn" disabled>💛 收进心里</button>
+    <button class="btn" id="homeBtn" disabled>↩ 回到首页</button>
+    <button class="btn" id="cardBtn" disabled>🖼️ 分享卡片</button>
+  </div>
+
+  <!-- 分类 -->
+  <div class="filters" id="filters"></div>
+
+  <!-- 收藏夹入口 -->
+  <div class="fav-entry">
+    <button class="btn" id="openFavBtn">📂 我的收藏夹（<span id="favCount">0</span>）</button>
+  </div>
+
+  <footer>
+    每一句话，都来自某个人在某段黑暗里写下的光。<br/>
+    它不能替你走路，但也许能陪你走完今晚这一段。<span class="heart">♡</span>
+  </footer>
+</div>
+
+<!-- 收藏夹弹窗 -->
+<div class="modal" id="favModal">
+  <div class="modal-card">
+    <div class="modal-head"><h3>📂 我的收藏夹</h3><button class="modal-x" id="favClose">×</button></div>
+    <div class="modal-body" id="favModalBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="copyAllBtn">📋 复制全部</button>
+      <button class="btn" id="exportBtn">⬇️ 导出 .txt</button>
+      <button class="btn" id="clearBtn">🗑️ 清空</button>
+    </div>
+  </div>
+</div>
+
+<!-- 抄下弹窗 -->
+<div class="modal" id="copyModal">
+  <div class="modal-card">
+    <div class="modal-head"><h3>📝 抄下这句</h3><button class="modal-x" id="copyClose">×</button></div>
+    <div class="modal-body">
+      <p class="modal-tip">选中下面文字可手动复制，或点「一键复制」。</p>
+      <textarea id="copyArea" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn primary" id="copyOnceBtn">📋 一键复制</button>
+      <button class="btn" id="dlTxtBtn">⬇️ 下载 .txt</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享卡片弹窗 -->
+<div class="modal" id="cardModal">
+  <div class="modal-card">
+    <div class="modal-head"><h3>🖼️ 分享卡片</h3><button class="modal-x" id="cardClose">×</button></div>
+    <div class="modal-body" id="cardCanvasHolder">
+      <p class="modal-tip">把这句话和今晚的处方，做成一张图，送给自己或需要的人。</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn primary" id="saveCardBtn">⬇️ 保存图片</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 情绪 ===== */
+const MOODS=[
+  {key:"随机",emoji:"🎲",label:"随便翻翻"},
+  {key:"挫败",emoji:"💥",label:"挫败"},
+  {key:"失落",emoji:"🌧️",label:"失落"},
+  {key:"emo",emoji:"🌑",label:"emo"},
+  {key:"失恋",emoji:"💔",label:"失恋"},
+  {key:"工作不顺",emoji:"💼",label:"工作不顺"},
+  {key:"迷茫",emoji:"🌫️",label:"迷茫"},
+  {key:"自我否定",emoji:"🪞",label:"自我否定"},
+  {key:"压力爆棚",emoji:"🔥",label:"压力爆棚"},
+  {key:"无力",emoji:"🌊",label:"无力"},
+  {key:"无聊",emoji:"🫥",label:"无聊"},
+];
+const MOOD_CAP={
+  "随机":"这一页，刚好翻给你。",
+  "挫败":"裂缝里，光才照得进来。",
+  "失落":"船会靠岸，只是需要一点时间。",
+  "emo":"雨会停，星星会替你亮着。",
+  "失恋":"心碎过的地方，会重新长出血肉。",
+  "工作不顺":"乱过的，终会理顺。",
+  "迷茫":"迷路的时候，先停下，也很好。",
+  "自我否定":"你比你对自己说的，要好得多。",
+  "压力爆棚":"撑不住不是软弱，是身体在喊停。",
+  "无力":"允许自己先瘫一会儿，没关系。",
+  "无聊":"空白，也是在为好事腾地方。",
+};
+
+/* ===== 心境处方：按情绪推荐 书 / 电影 / 歌 / 活动 ===== */
+const RECOMMEND={
+  "挫败":{
+    book:{n:"《活出生命的意义》· 维克多·弗兰克尔",w:"他在集中营里悟出：人永远能选择面对苦难的态度。失败不等于你这个人不行。"},
+    movie:{n:"《垫底辣妹》",w:"一个倒数第一的女生用一年考上名校。逆袭的故事，专治「我不行」。"},
+    song:{n:"《追梦赤子心》· GALA",w:"「向前跑，迎着冷眼和嘲笑」——把憋着的劲，唱出来。"},
+    activity:{n:"去跑个步，出一身汗",w:"身体动起来，大脑会分泌内啡肽，比坐着空想更有用。"}
+  },
+  "失落":{
+    book:{n:"《岛上书店》· 加布瑞埃拉·泽文",w:"「每个人的生命中，都有最艰难的那一年，将人生变得美好而辽阔。」"},
+    movie:{n:"《海蒂和爷爷》",w:"阿尔卑斯山的草甸与星空，温柔提醒你：世界依然很大、很美。"},
+    song:{n:"《后来》· 刘若英",w:"有些遗憾留着就好，它让你更懂珍惜接下来的相遇。"},
+    activity:{n:"去公园走走，看看树和天空",w:"亲近自然能悄悄降低压力激素，让心慢慢落地。"}
+  },
+  "emo":{
+    book:{n:"《人间值得》· 中村恒子",w:"一位 90 岁心理医生的温柔叮嘱：不必太用力，活着本身就有意义。"},
+    movie:{n:"《小森林》",w:"一个人种地、做饭、看四季流转。安静到能听见自己的呼吸。"},
+    song:{n:"《这世界那么多人》· 莫文蔚",w:"「这世界那么多人，多幸运我有个我们」——你并不孤单。"},
+    activity:{n:"泡个热水澡，早点睡",w:"给身体充电，心情往往会在好好睡一觉后自己好转。"}
+  },
+  "失恋":{
+    book:{n:"《从你的全世界路过》· 张嘉佳",w:"关于爱与错过：有些人只陪你走一程，但那一程是真的。"},
+    movie:{n:"《和莎莫的500天》",w:"它教你分清「我爱的人」和「我虚构的人」，然后轻轻放下。"},
+    song:{n:"《成全》· 刘若英",w:"「成全了你的潇洒与冒险」——放手，也是对自己的温柔。"},
+    activity:{n:"把关于 ta 的东西收进箱子，做个仪式",w:"给这段关系一个句点，空间腾出来了，新的才会进来。"}
+  },
+  "工作不顺":{
+    book:{n:"《深度工作》· 卡尔·纽波特",w:"与其焦虑时长，不如练出专注力——把重要的做成，慌就少了。"},
+    movie:{n:"《穿普拉达的女王》",w:"看人在高压职场里摸爬滚打，你会明白：你比这份工更重要。"},
+    song:{n:"《夜空中最亮的星》· 逃跑计划",w:"「给我再去相信的勇气」——累的时候，让歌替你撑一会儿。"},
+    activity:{n:"写下今天「完成的三件小事」",w:"给自己正向反馈，哪怕只是「准时吃饭」「回了一封邮件」。"}
+  },
+  "迷茫":{
+    book:{n:"《牧羊少年奇幻之旅》· 保罗·柯艾略",w:"「当你真心渴望某样东西，整个宇宙会助你实现。」先出发，路会自己出现。"},
+    movie:{n:"《白日梦想家》",w:"跳出日常，去冰岛、去格陵兰——看清自己真正想去哪。"},
+    song:{n:"《平凡之路》· 朴树",w:"「徘徊着的，在路上的」——迷茫的人，其实都在寻找。"},
+    activity:{n:"把「我该做什么」写下来，只列一件今天能做的小事",w:"大方向想不清没关系，先让双脚动起来。"}
+  },
+  "自我否定":{
+    book:{n:"《被讨厌的勇气》· 岸见一郎 / 古贺史健",w:"课题分离：别人的评价，不是你的定义。你不必讨所有人喜欢。"},
+    movie:{n:"《奇迹男孩》",w:"一个生来不同的男孩，让所有人明白：你本来就很珍贵。"},
+    song:{n:"《你不是真正的快乐》· 五月天",w:"「你不是真正的快乐，你的笑只是保护色」——承认累，也没关系。"},
+    activity:{n:"写三件「今天我做得还不错」的小事",w:"哪怕是「好好吃了一顿饭」，也值得被自己看见。"}
+  },
+  "压力爆棚":{
+    book:{n:"《当下的力量》· 埃克哈特·托利",w:"把注意力拉回此刻这一口气，焦虑会松一点。"},
+    movie:{n:"《实习生》",w:"看老司机如何四两拨千斤——松弛，本身就是一种能力。"},
+    song:{n:"《隐形的翅膀》· 张韶涵",w:"「每一次都在徘徊孤单中坚强」——你比你以为的更能撑。"},
+    activity:{n:"关掉消息通知 30 分钟，只做当下这一件",w:"切断被打断，压力会小很多。"}
+  },
+  "无力":{
+    book:{n:"《你当像鸟飞往你的山》· 塔拉·韦斯特弗",w:"一个在废墟里长大的女孩，最终飞出了自己的山——无力是可以被跨越的。"},
+    movie:{n:"《弱点》",w:"一个被世界遗忘的男孩，被温柔接住。你值得被接住。"},
+    song:{n:"《泡沫》· 邓紫棋",w:"「美丽的泡沫，虽然一触就破」——承认脆弱，反而有力量。"},
+    activity:{n:"允许自己今天「什么都不做」，瘫一会儿",w:"休息不是罪，是给电量见底的自己充电。"}
+  },
+  "无聊":{
+    book:{n:"《你今天真好看》· 莉兹·克里莫",w:"几页治愈小漫画，不费脑，却能让人咯吱笑出声。"},
+    movie:{n:"《布达佩斯大饭店》",w:"韦斯·安德森的糖果色世界，光是看着就是一种享受。"},
+    song:{n:"《起风了》· 买辣椒也用券",w:"「这一生，不欠任何人，只欠自己一场尽兴。」"},
+    activity:{n:"走一条从没走过的路回家",w:"换条路线、看看不一样的窗景，无聊会被新鲜感悄悄替换。"}
+  }
+};
+const RECOMMEND_KEYS=Object.keys(RECOMMEND);
+
+/* ===== 语录数据：来自文学 / 电影 / 音乐 / 诗歌，含适用情绪 ===== */
+const QUOTES = [
+  {cat:"文学",mood:["挫败","自我否定"],q:"一个人可以被毁灭，但不能被打败。",en:"A man can be destroyed but not defeated.",src:"海明威《老人与海》"},
+  {cat:"文学",mood:["挫败","emo","自我否定"],q:"在隆冬，我终于知道，我身上有一个不可战胜的夏天。",en:"In the midst of winter, I found there was, within me, an invincible summer.",src:"加缪《西西弗神话》"},
+  {cat:"文学",mood:["失落","挫败","迷茫"],q:"当你真心渴望某样东西时，整个宇宙都会联合起来帮助你完成。",src:"保罗·柯艾略《牧羊少年奇幻之旅》"},
+  {cat:"文学",mood:["emo","失落","无力"],q:"人是为活着本身而活着的，而不是为了活着之外的任何事物。",src:"余华《活着》"},
+  {cat:"文学",mood:["emo","无聊","迷茫"],q:"所有的大人都曾经是小孩，虽然，只有少数的人记得。",src:"圣埃克苏佩里《小王子》"},
+  {cat:"文学",mood:["挫败","失落","emo","迷茫"],q:"世界上只有一种真正的英雄主义，那就是在认清生活的真相后依然热爱生活。",en:"There is only one heroism in the world: to see the world as it is and to love it.",src:"罗曼·罗兰"},
+  {cat:"文学",mood:["挫败","失落","emo","无力"],q:"当你穿过了暴风雨，你就不再是原来那个人了。",src:"村上春树《海边的卡夫卡》"},
+  {cat:"文学",mood:["失落","工作不顺","无聊","迷茫"],q:"正因为是一张白纸，才可以画任何地图，一切都掌握在你自己手上。",src:"东野圭吾《解忧杂货店》"},
+  {cat:"文学",mood:["工作不顺","挫败","压力爆棚"],q:"其实我们每个人的生活都是一个世界，即使最平凡的人也要为他生活的那个世界而奋斗。",src:"路遥《平凡的世界》"},
+  {cat:"文学",mood:["emo","失落","无力"],q:"死是一件不必急于求成的事，死是一个必然会降临的节日。",src:"史铁生《我与地坛》"},
+  {cat:"文学",mood:["无聊","emo","迷茫"],q:"我们曾如此渴望命运的波澜，到最后才发现：人生最曼妙的风景，竟是内心的淡定与从容。",src:"杨绛"},
+  {cat:"文学",mood:["挫败","工作不顺","自我否定","压力爆棚"],q:"一个人要像一支队伍，对着自己的头脑和心灵招兵买马。",src:"刘瑜《送你一颗子弹》"},
+  {cat:"文学",mood:["无聊","迷茫"],q:"岁月极美，在于它必然的流逝。春花、秋月、夏日、冬雪。",src:"三毛"},
+  {cat:"文学",mood:["emo","无聊","迷茫"],q:"以清净心看世界，以欢喜心过生活。",src:"林清玄"},
+  {cat:"文学",mood:["挫败","失落","迷茫"],q:"所谓无底深渊，下去，也是前程万里。",src:"木心"},
+  {cat:"文学",mood:["挫败","工作不顺","自我否定"],q:"我不怕风暴，因为我正在学习如何驾驭我的船。",en:"I am not afraid of storms, for I am learning how to sail my ship.",src:"路易莎·梅·奥尔科特《小妇人》"},
+  {cat:"文学",mood:["失落","emo","无力"],q:"明天又是新的一天。",en:"Tomorrow is another day.",src:"玛格丽特·米切尔《飘》"},
+  {cat:"诗歌",mood:["emo","失落","无力"],q:"假如生活欺骗了你，不要悲伤，不要心急！相信吧，快乐的日子将会来临。",src:"普希金《假如生活欺骗了你》"},
+  {cat:"诗歌",mood:["失落","emo","失恋","无力"],q:"如果你因错过太阳而流泪，那么你也将错过群星。",en:"If you shed tears when you miss the sun, you also miss the stars.",src:"泰戈尔《飞鸟集》"},
+  {cat:"诗歌",mood:["挫败","失落","emo","无力"],q:"有何胜利可言？挺住意味着一切。",src:"里尔克《给青年诗人的十封信》"},
+  {cat:"诗歌",mood:["挫败","emo","失落","无力"],q:"相信不屈不挠的努力，相信战胜死亡的年轻，相信未来，热爱生命。",src:"食指《相信未来》"},
+  {cat:"诗歌",mood:["emo","失落","失恋","无力"],q:"黑夜给了我黑色的眼睛，我却用它寻找光明。",src:"顾城《一代人》"},
+  {cat:"诗歌",mood:["挫败","失落","迷茫"],q:"新的转机和闪闪星斗，正在缀满没有遮拦的天空。",src:"北岛"},
+  {cat:"诗歌",mood:["挫败","工作不顺","迷茫"],q:"没有比脚更长的路，没有比人更高的山。",src:"汪国真"},
+  {cat:"电影",mood:["挫败","失落","emo","无力"],q:"希望是好事，也许是最好的事，好事的永远不会消逝。",en:"Hope is a good thing, maybe the best of things, and no good thing ever dies.",src:"电影《肖申克的救赎》"},
+  {cat:"电影",mood:["工作不顺","挫败","压力爆棚"],q:"你要守护自己的梦想。",en:"You gotta dream, you gotta protect it.",src:"电影《当幸福来敲门》"},
+  {cat:"电影",mood:["失落","迷茫"],q:"不管前方的路有多苦，只要走的方向正确，都比站在原地更接近幸福。",src:"电影《千与千寻》"},
+  {cat:"电影",mood:["emo","无聊","无力"],q:"火花不是你的人生目标，你不需要为目的而活——活着本身，就有意义。",src:"电影《心灵奇旅》"},
+  {cat:"电影",mood:["无聊","迷茫"],q:"生活就像一盒巧克力，你永远不知道下一颗是什么味道。",en:"Life is like a box of chocolates, you never know what you're gonna get.",src:"电影《阿甘正传》"},
+  {cat:"电影",mood:["emo","无聊","无力"],q:"没有人的人生是完美的，但生命的每一刻都值得庆祝。",src:"电影《美丽人生》"},
+  {cat:"电影",mood:["失恋","失落","无力"],q:"只要在被人记着，你就永远活着。",src:"电影《寻梦环游记》"},
+  {cat:"电影",mood:["工作不顺","挫败","压力爆棚"],q:"在动物城，谁都可以成为任何想成为的样子。",en:"Anyone can be anything.",src:"电影《疯狂动物城》"},
+  {cat:"电影",mood:["无聊","emo","迷茫"],q:"去看看世界，迎接挑战，感受自然，敞开心扉——这就是生活的意义。",src:"电影《白日梦想家》"},
+  {cat:"电影",mood:["emo","失落","失恋","无力"],q:"即使在最黑暗的时刻，也能找到幸福，只要有人记得点亮灯火。",en:"Happiness can be found even in the darkest of times, if one only remembers to turn on the light.",src:"J.K.罗琳《哈利·波特》"},
+  {cat:"音乐",mood:["挫败","工作不顺","自我否定"],q:"逆风的方向，更适合飞翔。",src:"五月天《倔强》"},
+  {cat:"音乐",mood:["失落","emo","无力"],q:"我曾经跨过山和大海，也穿过人山人海……冥冥中，这是我唯一要走的路。",src:"朴树《平凡之路》"},
+  {cat:"音乐",mood:["emo","失落","无力"],q:"没有什么能够阻挡，你对自由的向往。",src:"许巍《蓝莲花》"},
+  {cat:"音乐",mood:["挫败","失恋","工作不顺","自我否定","压力爆棚"],q:"爱你孤身走暗巷，爱你不跪的模样，爱你对峙过绝望，不肯哭一场。",src:"陈奕迅《孤勇者》"},
+  {cat:"音乐",mood:["emo","无聊","无力"],q:"不要这么容易就想放弃，追不到的梦想，换个梦不就得了。",src:"周杰伦《稻香》"},
+  {cat:"音乐",mood:["挫败","失恋","自我否定"],q:"你鼓舞了我，让我能超越昨日的自己。",en:"You raise me up, to more than I can be.",src:"歌曲《You Raise Me Up》"}
+];
+
+/* ===== 元素 ===== */
+const $=id=>document.getElementById(id);
+const book=$('book'),cover=$('cover'),openBtn=$('openBtn'),againBtn=$('againBtn'),
+      copyBtn=$('copyBtn'),favBtn=$('favBtn'),catEl=$('cat'),quoteEl=$('quote'),
+      enEl=$('en'),srcEl=$('src'),askBox=$('askBox'),skipAsk=$('skipAsk'),
+      filtersEl=$('filters'),moodRow=$('moodRow'),moodBox=$('moodBox'),
+      moodAnim=$('moodAnim'),moodSvg=$('moodSvg'),moodCap=$('moodCap'),
+      toast=$('toast');
+
+let currentFilter="全部";
+let currentMood="随机";
+let lastIndex=-1;
+let current=null;
+
+/* 情绪按钮 */
+MOODS.forEach(m=>{
+  const b=document.createElement('button');
+  b.className='mood-chip'+(m.key==="随机"?' active':'');
+  b.innerHTML=m.emoji+' '+m.label;
+  b.onclick=()=>{
+    currentMood=m.key;
+    document.querySelectorAll('.mood-chip').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  };
+  moodRow.appendChild(b);
+});
+
+/* 分类 */
+const cats=["全部",...Array.from(new Set(QUOTES.map(q=>q.cat)))];
+cats.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='chip'+(c==="全部"?' active':'');
+  b.textContent=c;
+  b.onclick=()=>{
+    currentFilter=c;
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  };
+  filtersEl.appendChild(b);
+});
+
+function pool(){
+  let p=QUOTES;
+  if(currentFilter!=="全部")p=p.filter(q=>q.cat===currentFilter);
+  if(currentMood!=="随机")p=p.filter(q=>q.mood&&q.mood.includes(currentMood));
+  if(!p.length)p=QUOTES; // 兜底
+  return p;
+}
+
+function pick(){
+  const p=pool();
+  let i;
+  do{i=Math.floor(Math.random()*p.length);}while(p.length>1 && p[i]===current);
+  current=p[i];
+  return current;
+}
+
+function render(q){
+  catEl.textContent=q.cat;
+  quoteEl.textContent="「"+q.q+"」";
+  enEl.textContent=q.en?q.en:"";
+  srcEl.innerHTML="—— <b>"+q.src+"</b>";
+}
+
+/* 情绪治愈小动画 */
+function scene(mood){
+  switch(mood){
+    case "挫败":return `<svg viewBox="0 0 160 120" class="scn">
+      <ellipse cx="80" cy="104" rx="54" ry="10" fill="rgba(244,199,123,.18)"/>
+      <rect x="34" y="98" width="92" height="12" rx="4" fill="#6b4f2a"/>
+      <g class="m-sprout">
+        <rect x="77" y="58" width="6" height="42" rx="3" fill="#7bbf6a"/>
+        <path d="M80 66 C58 60 50 42 53 32 C70 40 80 54 80 66Z" fill="#8fd17a"/>
+        <path d="M80 60 C102 54 110 36 107 26 C90 34 80 50 80 60Z" fill="#8fd17a"/>
+      </g></svg>`;
+    case "失落":return `<svg viewBox="0 0 160 120" class="scn">
+      <rect x="0" y="86" width="160" height="34" fill="rgba(120,160,200,.16)"/>
+      <g class="m-boat">
+        <path d="M58 84 L102 84 L92 70 L68 70 Z" fill="#f4c77b"/>
+        <path d="M80 70 L80 52 L98 70 Z" fill="#fff" opacity=".85"/>
+      </g>
+      <g class="m-star"><path d="M128 30 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#f7d9a0"/></g></svg>`;
+    case "emo":return `<svg viewBox="0 0 160 120" class="scn">
+      <circle cx="80" cy="50" r="28" fill="#cfc7ba" opacity=".85"/>
+      <g class="m-rain" stroke="#9fb6d6" stroke-width="3" stroke-linecap="round">
+        <line x1="55" y1="78" x2="50" y2="92"/><line x1="80" y1="80" x2="75" y2="94"/><line x1="105" y1="78" x2="100" y2="92"/>
+      </g>
+      <g class="m-star2" fill="#f7d9a0">
+        <path d="M40 28 l2 5 5 1 -4 4 1 5 -4 -3 -4 3 1 -5 -4 -4 5 -1z"/>
+        <path d="M120 44 l2 5 5 1 -4 4 1 5 -4 -3 -4 3 1 -5 -4 -4 5 -1z"/>
+      </g></svg>`;
+    case "失恋":return `<svg viewBox="0 0 160 120" class="scn">
+      <g class="m-glow"><circle cx="80" cy="58" r="34" fill="rgba(244,199,123,.22)"/></g>
+      <g class="m-heart"><path d="M80 86 C50 66 40 50 40 40 C40 28 50 22 60 22 C68 22 74 27 80 34 C86 27 92 22 100 22 C110 22 120 28 120 40 C120 50 110 66 80 86Z" fill="#e08a8a"/></g>
+      <path class="m-crack" d="M80 34 L74 48 L84 56 L76 72" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`;
+    case "工作不顺":return `<svg viewBox="0 0 160 120" class="scn">
+      <g fill="#7bbf6a">
+        <rect class="m-bar" style="animation-delay:0s" x="44" y="60" width="14" height="44" rx="4"/>
+        <rect class="m-bar" style="animation-delay:.2s" x="66" y="46" width="14" height="58" rx="4"/>
+        <rect class="m-bar" style="animation-delay:.4s" x="88" y="34" width="14" height="70" rx="4"/>
+        <rect class="m-bar" style="animation-delay:.15s" x="110" y="52" width="14" height="52" rx="4"/>
+      </g></svg>`;
+    case "迷茫":return `<svg viewBox="0 0 160 120" class="scn">
+      <g fill="rgba(207,199,186,.5)"><ellipse class="m-cloud" cx="56" cy="48" rx="34" ry="15"/><ellipse class="m-cloud" style="animation-delay:1s" cx="106" cy="64" rx="40" ry="18"/></g>
+      <g class="m-glow"><circle cx="80" cy="58" r="11" fill="#f7d9a0"/></g>
+      <g class="m-star2" fill="#fff"><path d="M80 34 l2 5 5 1 -4 4 1 5 -4 -3 -4 3 1 -5 -4 -4 5 -1z"/></g></svg>`;
+    case "自我否定":return `<svg viewBox="0 0 160 120" class="scn">
+      <ellipse cx="80" cy="104" rx="46" ry="9" fill="rgba(244,199,123,.16)"/>
+      <g class="m-glow"><circle cx="80" cy="54" r="30" fill="rgba(244,199,123,.18)"/></g>
+      <g class="m-sprout"><rect x="77" y="60" width="6" height="42" rx="3" fill="#8fd17a"/><path d="M80 68 C60 62 52 46 55 36 C72 44 80 56 80 68Z" fill="#8fd17a"/><path d="M80 62 C100 56 108 40 105 30 C88 38 80 52 80 62Z" fill="#8fd17a"/></g></svg>`;
+    case "压力爆棚":return `<svg viewBox="0 0 160 120" class="scn">
+      <g fill="#f6b17a"><path class="m-sprout" style="animation-delay:0s" d="M62 98 C56 82 68 76 64 58 C80 72 82 86 78 98Z"/><path class="m-sprout" style="animation-delay:.45s" d="M98 98 C92 80 106 72 100 52 C116 66 118 86 112 98Z"/></g>
+      <g fill="#f7d9a0"><path class="m-bub" style="animation-delay:.2s" d="M80 94 C76 82 86 76 82 62 C94 74 94 88 90 94Z"/></g></svg>`;
+    case "无力":return `<svg viewBox="0 0 160 120" class="scn">
+      <g class="m-cloud" fill="rgba(120,160,200,.4)"><path d="M6 82 Q40 66 74 82 T150 82 V102 H6 Z"/></g>
+      <g class="m-cloud" style="animation-delay:1.2s" fill="rgba(120,160,200,.26)"><path d="M0 94 Q42 80 82 94 T160 94 V106 H0 Z"/></g>
+      <g class="m-bub" fill="rgba(244,199,123,.65)"><circle cx="80" cy="58" r="6"/></g></svg>`;
+    case "无聊":return `<svg viewBox="0 0 160 120" class="scn">
+      <g fill="rgba(244,199,123,.5)" stroke="rgba(255,255,255,.6)" stroke-width="1.5">
+        <circle class="m-bub" style="animation-delay:0s" cx="55" cy="80" r="9"/>
+        <circle class="m-bub" style="animation-delay:.9s" cx="85" cy="90" r="12"/>
+        <circle class="m-bub" style="animation-delay:1.6s" cx="110" cy="84" r="7"/>
+      </g></svg>`;
+    default:return `<svg viewBox="0 0 160 120" class="scn">
+      <g class="m-star" fill="#f7d9a0"><path d="M80 26 l6 16 17 2 -13 12 4 17 -14 -9 -14 9 4 -17 -13 -12 17 -2z"/></g></svg>`;
+  }
+}
+
+/* 心境处方渲染 */
+function renderRemedy(mood){
+  const list=$('remedyList');
+  const useMood=(mood==="随机")?RECOMMEND_KEYS[Math.floor(Math.random()*RECOMMEND_KEYS.length)]:mood;
+  const r=RECOMMEND[useMood];
+  if(!r){$('remedy').style.display='none';return;}
+  const items=[
+    {ic:"📖",name:r.book.n,why:r.book.w},
+    {ic:"🎬",name:r.movie.n,why:r.movie.w},
+    {ic:"🎵",name:r.song.n,why:r.song.w},
+    {ic:"🌿",name:r.activity.n,why:r.activity.w},
+  ];
+  list.innerHTML=items.map(it=>`<div class="r-item"><div class="r-ic">${it.ic}</div><div class="r-bd"><div class="r-name">${it.name}</div><div class="r-why">${it.why}</div></div></div>`).join('');
+  $('remedy').style.display='block';
+}
+
+function open(){
+  pick();
+  render(current);
+  moodSvg.innerHTML=scene(currentMood);
+  moodCap.textContent=MOOD_CAP[currentMood]||"";
+  moodAnim.style.display='flex';
+  renderRemedy(currentMood);
+  book.classList.add('open');
+  openBtn.disabled=true;
+  againBtn.disabled=false;copyBtn.disabled=false;favBtn.disabled=false;$('homeBtn').disabled=false;$('cardBtn').disabled=false;
+  askBox.style.opacity='0';moodBox.style.opacity='0';
+  setTimeout(()=>{askBox.style.height='0';askBox.style.margin='0';askBox.style.overflow='hidden';
+    moodBox.style.height='0';moodBox.style.margin='0';moodBox.style.overflow='hidden';},400);
+}
+
+function again(){
+  pick();
+  moodSvg.innerHTML=scene(currentMood);
+  moodCap.textContent=MOOD_CAP[currentMood]||"";
+  renderRemedy(currentMood);
+  book.classList.remove('open');
+  setTimeout(()=>{render(current);book.classList.add('open');},360);
+}
+
+function fmt(q){return q.q+(q.en?"\n"+q.en:"")+"\n——"+q.src+(q.mood&&q.mood.length?"\n（"+q.mood.join("·")+"）":"")+"\n\n（来自《答案之书》）";}
+
+function copy(){
+  if(!current)return;
+  $('copyArea').value=fmt(current);
+  $('copyModal').classList.add('show');
+}
+function copyNow(){
+  const t=$('copyArea').value;
+  navigator.clipboard?.writeText(t).then(()=>showToast("已复制，送给此刻的自己 ♡"))
+    .catch(()=>showToast("请手动选中文字复制"));
+}
+function downloadTxt(name,text){
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+
+function fav(){
+  if(!current)return;
+  let favs=JSON.parse(localStorage.getItem('answerbook_favs')||'[]');
+  const key=current.q+current.src;
+  if(favs.some(f=>f.q+("—"+f.src)===key)){showToast("这句已经收在你心里了");return;}
+  favs.unshift({q:current.q,en:current.en||"",src:current.src,
+    mood:(current.mood||[]).join("·"),date:new Date().toLocaleDateString('zh-CN')});
+  localStorage.setItem('answerbook_favs',JSON.stringify(favs.slice(0,50)));
+  updateFavCount();showToast("已收进心里 💛");
+}
+
+function updateFavCount(){
+  const n=JSON.parse(localStorage.getItem('answerbook_favs')||'[]').length;
+  $('favCount').textContent=n;
+}
+function openFav(){
+  const favs=JSON.parse(localStorage.getItem('answerbook_favs')||'[]');
+  const body=$('favModalBody');body.innerHTML='';
+  if(!favs.length){body.innerHTML='<div class="empty">收藏夹还是空的。遇到戳中你的那句，点「收进心里」。</div>';}
+  favs.forEach((f,idx)=>{
+    const d=document.createElement('div');d.className='fav-card';
+    d.innerHTML='<div class="txt">'+f.q+'<span class="meta">——'+f.src+
+      (f.mood?' ｜ '+f.mood:'')+(f.date?' ｜ '+f.date:'')+'</span></div>';
+    const del=document.createElement('button');del.className='del';del.textContent='×';
+    del.onclick=()=>{let a=JSON.parse(localStorage.getItem('answerbook_favs')||'[]');a.splice(idx,1);localStorage.setItem('answerbook_favs',JSON.stringify(a));updateFavCount();openFav();};
+    d.appendChild(del);body.appendChild(d);
+  });
+  $('favModal').classList.add('show');
+}
+function favText(){
+  const favs=JSON.parse(localStorage.getItem('answerbook_favs')||'[]');
+  if(!favs.length)return "";
+  return favs.map((f,i)=>(i+1)+'. '+f.q+'\n   ——'+f.src+(f.mood?'  ['+f.mood+']':'')).join('\n\n');
+}
+
+function showToast(msg){toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200);}
+
+/* 分享卡片：把「一句话 + 处方」画成海报图 */
+function wrapText(ctx,text,maxW){
+  const tokens=text.match(/[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]|[^\s\u3000-\u303f\u3400-\u9fff\uff00-\uffef]+|\s+/g)||[text];
+  const lines=[]; let line='';
+  for(const tk of tokens){
+    if(/^\s+$/.test(tk)){ if(line&&!/ $/.test(line))line+=' '; continue; }
+    const test=line+tk;
+    if(ctx.measureText(test).width>maxW && line){ lines.push(line.replace(/\s+$/,'')); line=tk; }
+    else line=test;
+  }
+  if(line) lines.push(line.replace(/\s+$/,''));
+  return lines;
+}
+function drawContent(ctx,W,pad,innerW,startY){
+  let y=startY+76;
+  ctx.textAlign='center';
+  ctx.fillStyle='#f4c77b'; ctx.font='700 30px "Noto Serif SC",serif';
+  ctx.fillText('答 案 之 书',W/2,y); y+=46;
+  ctx.strokeStyle='rgba(244,199,123,.4)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(W/2-120,y); ctx.lineTo(W/2+120,y); ctx.stroke(); y+=48;
+
+  const ml=MOODS.find(m=>m.key===currentMood);
+  ctx.fillStyle='rgba(207,199,186,.85)'; ctx.font='22px "Noto Serif SC",serif';
+  ctx.fillText((ml?ml.emoji+'  ':'')+'你今天的感觉：'+(ml?ml.label:''),W/2,y); y+=46;
+
+  const cap=MOOD_CAP[currentMood]||"";
+  ctx.fillStyle='#f7d9a0'; ctx.font='26px "Noto Serif SC",serif';
+  wrapText(ctx,cap,innerW).forEach(l=>{ctx.fillText(l,W/2,y); y+=40;}); y+=20;
+
+  ctx.fillStyle='#f5f0e8'; ctx.font='700 40px "Noto Serif SC",serif';
+  wrapText(ctx,'「'+current.q+'」',innerW).forEach(l=>{ctx.fillText(l,W/2,y); y+=60;}); y+=18;
+
+  if(current.en){
+    ctx.fillStyle='rgba(207,199,186,.8)'; ctx.font='italic 21px serif';
+    wrapText(ctx,current.en,innerW).forEach(l=>{ctx.fillText(l,W/2,y); y+=32;}); y+=16;
+  }
+
+  ctx.fillStyle='#cbb48f'; ctx.font='22px "Noto Serif SC",serif';
+  ctx.fillText('—— '+current.src,W/2,y); y+=52;
+
+  ctx.strokeStyle='rgba(244,199,123,.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,y-22); ctx.lineTo(W-pad,y-22); ctx.stroke();
+
+  const useMood=(currentMood==="随机")?RECOMMEND_KEYS[Math.floor(Math.random()*RECOMMEND_KEYS.length)]:currentMood;
+  const r=RECOMMEND[useMood];
+  if(r){
+    y+=26;
+    ctx.fillStyle='#f7d9a0'; ctx.font='700 25px "Noto Serif SC",serif';
+    ctx.fillText('🌿 今晚，可以这样陪自己',W/2,y); y+=46;
+    const items=[
+      {ic:"📖",name:r.book.n,why:r.book.w},
+      {ic:"🎬",name:r.movie.n,why:r.movie.w},
+      {ic:"🎵",name:r.song.n,why:r.song.w},
+      {ic:"🌿",name:r.activity.n,why:r.activity.w},
+    ];
+    items.forEach(it=>{
+      ctx.textAlign='left'; ctx.fillStyle='#f5f0e8'; ctx.font='700 22px "Noto Serif SC",serif';
+      wrapText(ctx,it.name,innerW-40).forEach(l=>{ctx.fillText(it.ic+' '+l,pad,y); y+=32;});
+      ctx.fillStyle='rgba(207,199,186,.82)'; ctx.font='17px "Noto Serif SC",serif';
+      wrapText(ctx,it.why,innerW-40).forEach(l=>{ctx.fillText(l,pad+34,y); y+=27;});
+      y+=20;
+    });
+  }
+  ctx.textAlign='center';
+  y+=12;
+  ctx.fillStyle='rgba(244,199,123,.7)'; ctx.font='20px "Noto Serif SC",serif';
+  ctx.fillText('翻一页，看看光  ·  来自《答案之书》',W/2,y); y+=pad;
+  return y;
+}
+function drawCard(){
+  if(!current)return;
+  const W=900, H_MAX=2000, pad=70, innerW=W-pad*2;
+  const MIN_H=1200; // 3:4 海报比例
+
+  const measure=document.createElement('canvas'); measure.width=W; measure.height=H_MAX;
+  const y=drawContent(measure.getContext('2d'),W,pad,innerW,0);
+
+  const finalH=Math.max(y,MIN_H);
+  const out=document.createElement('canvas'); out.width=W; out.height=finalH;
+  const ctx=out.getContext('2d');
+
+  const g=ctx.createLinearGradient(0,0,W,finalH);
+  g.addColorStop(0,'#1b1b3a'); g.addColorStop(.5,'#2d2a4a'); g.addColorStop(1,'#4a3b5c');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,finalH);
+
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  for(let i=0;i<70;i++){ctx.globalAlpha=.15+Math.random()*.5;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*finalH,Math.random()*1.6+.4,0,Math.PI*2);ctx.fill();}
+  ctx.globalAlpha=1;
+
+  const rg=ctx.createRadialGradient(W*.82,10,10,W*.82,10,W*.62);
+  rg.addColorStop(0,'rgba(246,177,122,.32)'); rg.addColorStop(1,'rgba(246,177,122,0)');
+  ctx.fillStyle=rg; ctx.fillRect(0,0,W,finalH);
+
+  ctx.drawImage(measure,0,0,W,y,0,0,W,y);
+
+  if(finalH>y+80){
+    ctx.textAlign='center'; ctx.fillStyle='rgba(244,199,123,.45)'; ctx.font='18px "Noto Serif SC",serif';
+    ctx.fillText('长按 / 保存图片 · 分享给你关心的那个人',W/2,finalH-40);
+  }
+
+  const holder=$('cardCanvasHolder'); holder.innerHTML='';
+  holder.appendChild(out);
+  $('cardModal').classList.add('show');
+}
+
+/* 事件 */
+openBtn.onclick=open;
+againBtn.onclick=again;
+copyBtn.onclick=copy;
+favBtn.onclick=fav;
+cover.onclick=()=>{if(!book.classList.contains('open'))open();};
+skipAsk.onclick=()=>{askBox.style.opacity='0';setTimeout(()=>{askBox.style.height='0';askBox.style.margin='0';askBox.style.overflow='hidden';},400);};
+
+function home(){
+  book.classList.remove('open');
+  moodAnim.style.display='none';
+  $('remedy').style.display='none';
+  askBox.style.opacity='1';askBox.style.height='';askBox.style.margin='';askBox.style.overflow='';
+  moodBox.style.opacity='1';moodBox.style.height='';moodBox.style.margin='';moodBox.style.overflow='';
+  openBtn.disabled=false;
+  againBtn.disabled=true;copyBtn.disabled=true;favBtn.disabled=true;$('homeBtn').disabled=true;$('cardBtn').disabled=true;
+}
+$('homeBtn').onclick=home;
+$('cardBtn').onclick=()=>{ if(!current)return; (document.fonts&&document.fonts.ready)?document.fonts.ready.then(drawCard):drawCard(); };
+$('cardClose').onclick=()=>$('cardModal').classList.remove('show');
+$('saveCardBtn').onclick=()=>{
+  const cv=document.querySelector('#cardCanvasHolder canvas');
+  if(!cv)return;
+  const a=document.createElement('a');
+  a.href=cv.toDataURL('image/png');
+  a.download='答案之书-分享卡片.png';
+  document.body.appendChild(a);a.click();a.remove();
+  showToast('卡片已保存，去送给需要的人 ♡');
+};
+
+$('openFavBtn').onclick=openFav;
+$('favClose').onclick=()=>$('favModal').classList.remove('show');
+$('copyAllBtn').onclick=()=>{const t=favText();if(!t){showToast("收藏夹是空的");return;}navigator.clipboard?.writeText(t).then(()=>showToast("已复制全部收藏 ♡")).catch(()=>showToast("请手动复制"));};
+$('exportBtn').onclick=()=>{const t=favText();if(!t){showToast("收藏夹是空的");return;}downloadTxt('我的答案之书收藏.txt',t);showToast("已导出 .txt");};
+$('clearBtn').onclick=()=>{if(confirm("确定清空收藏夹？此操作不可恢复。")){localStorage.removeItem('answerbook_favs');updateFavCount();openFav();showToast("收藏夹已清空");}};
+$('copyClose').onclick=()=>$('copyModal').classList.remove('show');
+$('copyOnceBtn').onclick=copyNow;
+$('dlTxtBtn').onclick=()=>{if(current)downloadTxt('答案之书一句话.txt',fmt(current));};
+
+/* 点击遮罩关闭弹窗 */
+['favModal','copyModal','cardModal'].forEach(id=>{$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).classList.remove('show');});});
+
+/* 星空 */
+(function(){
+  const s=$('stars');let h='';
+  for(let i=0;i<60;i++){h+='<i style="left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation-delay:'+(Math.random()*4)+'s"></i>';}
+  s.innerHTML=h;
+})();
+
+updateFavCount();
+</script>
+</body>
+</html>
