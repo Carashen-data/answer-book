@@ -43,7 +43,7 @@
 ## 🚀 用法
 
 ### 本地使用
-直接双击 [`index.html`](https://github.com/Carashen-data/answer-book/blob/main/index.html)，或在浏览器打开即可。点开后可复制文件地址到浏览器打开，或使用上方的在线体验链接。
+直接双击 `index.html`，或在浏览器打开即可。文件地址：https://github.com/Carashen-data/answer-book/blob/main/index.html （点开后可复制；或直接使用上方在线体验链接 https://carashen-data.github.io/answer-book/ ）
 
 ### 部署到 GitHub Pages
 1. 把本仓库 Fork 或克隆到你的 GitHub。
