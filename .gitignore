@@ -3,3 +3,6 @@
 
 # 部署副本（源码即 index.html，dist 为 CloudStudio 部署用副本）
 dist/
+
+# Netlify 部署尝试残留(已弃用)
+netlify-dist/
