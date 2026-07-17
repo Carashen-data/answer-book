@@ -4,6 +4,8 @@
 
 翻一页，宇宙会从文学、电影、音乐与诗歌里，为你挑出一句此刻最需要的光。
 
+🌐 **在线体验：** https://carashen-data.github.io/answer-book/
+
 ---
 
 ## ✨ 这是什么
@@ -46,7 +48,7 @@
 ### 部署到 GitHub Pages
 1. 把本仓库 Fork 或克隆到你的 GitHub。
 2. 在仓库 **Settings → Pages** 中，Source 选择 `main` 分支、目录 `/ (root)`。
-3. 稍等片刻，即可通过 `https://<你的用户名>.github.io/<仓库名>/` 访问。
+3. 稍等片刻，即可通过 https://carashen-data.github.io/answer-book/ 访问。
 
 ### 部署到其他静态托管
 因为是纯静态单文件，直接把 `index.html` 丢到任意静态托管（Vercel / Netlify / CloudStudio / Nginx）即可。
